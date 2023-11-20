@@ -12,12 +12,13 @@ body {
     display: flex;
     flex-direction: column;
     flex: auto;
+    height: 100vh;
 }
 
 #navbar {
     display: flex;
     flex-direction: row;
-    height: 10vh;
+    height: 50px;
 }
 
 #searchbar {
@@ -29,7 +30,7 @@ body {
 }
 
 #map { 
-    height: 90vh;
+    height: 100%;
 }
 
 .announce {
