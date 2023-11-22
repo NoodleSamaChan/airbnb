@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link rel="stylesheet" type="text/css" href="./static/style.css"/>
-        <script src="./static/main.js"></script>
+        <link rel="stylesheet" type="text/css" href="static/style.css"/>
+        <script src="static/main.js" defer></script>
         <title>LairBnB</title>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
             integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
@@ -14,16 +14,22 @@
             
     </head>
     <body>
-        <h1>Find your dream evil Lair!</h1>
-        <p>You can also put your own evil lair to rent for fellow villains.</p>
-        <div id="map"></div>
+        <div id="announcements">
+            <div class="announce">
+                <img src="https://avatars.githubusercontent.com/u/7032172?v=4"/> 
+                <span>Le vigan</span>
+            </div>
+            <div class="announce">
+                <img src="https://avatars.githubusercontent.com/u/3692335?v=4"/> 
+                <span>Lyon</span>
+            </div>
+        </div>
+        <div id="right">
+            <nav id="navbar">
+                <input id="searchbar" type="search" placeholder="Le vigan"/>
+                <input id="login" type="button" value="Log In"/>
+            </nav>
+            <div id="map"></div>
+        </div>
     </body>
-    <script>
-        var map = L.map('map').setView([51.505, -0.09], 13);
-
-        const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(map);
-    </script>
 </html>
