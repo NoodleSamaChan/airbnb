@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS announcements (
     title VARCHAR(500) NOT NULL, 
     image VARCHAR(2000) NOT NULL, 
     description VARCHAR(100000) NOT NULL, 
-    lon int NOT NULL, 
-    lat int NOT NULL
+    lon DOUBLE PRECISION NOT NULL, 
+    lat DOUBLE PRECISION NOT NULL
 );
 """)
 
