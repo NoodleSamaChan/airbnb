@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS announcements (
     title VARCHAR(500) NOT NULL, 
     image VARCHAR(2000) NOT NULL, 
     description VARCHAR(100000) NOT NULL, 
-    lon int NOT NULL, 
-    lat int NOT NULL
+    lon DOUBLE PRECISION NOT NULL, 
+    lat DOUBLE PRECISION NOT NULL
 );
 """)
 
@@ -49,7 +49,22 @@ def look_for_lair():
         query_request = query_request + " AND title LIKE '{search}'".format(search=args['search'])
     cur.execute(query_request)
 
-    return jsonify(cur.fetchall())
+    #changing the array result into an organised table
+    result = cur.fetchall()
+    result_table = []
+    print(result)
+    
+    for i in result:
+        values = {}
+        values['id'] = i[0]
+        values['title'] = i[1]
+        values['image'] = i[2]
+        values['lon'] = i[3]
+        values['lat'] = i[4]
+        result_table.append(values)
+    print(result_table)
+
+    return jsonify(result_table)
 
 @app.route("/lair/<id>", methods=['GET'])
 def one_lair(id):

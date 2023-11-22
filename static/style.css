@@ -30,25 +30,5 @@ body {
 }
 
 #map { 
-    height: 100%;
-}
-
-.announce {
-    display: flex;
-    height: 100px;
-    margin: 0px;
-    padding: 8px;
-
-    border-bottom: 1px dashed black;
-
-    img {
-        width: 100px;
-        height: 100px;
-        
-    }
-
-    span {
-        margin-left: 6px;
-        line-height: 100px;
-    }
+    height: 450px; 
 }
