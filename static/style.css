@@ -1,3 +1,54 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+#announcements {
+    width: 350px;
+}
+
+#right {
+    display: flex;
+    flex-direction: column;
+    flex: auto;
+    height: 100vh;
+}
+
+#navbar {
+    display: flex;
+    flex-direction: row;
+    height: 50px;
+}
+
+#searchbar {
+    width: 100%;
+}
+
+#login {
+    margin-left: auto;
+}
+
 #map { 
-    height: 450px; 
+    height: 100%;
+}
+
+.announce {
+    display: flex;
+    height: 100px;
+    margin: 0px;
+    padding: 8px;
+
+    border-bottom: 1px dashed black;
+
+    img {
+        width: 100px;
+        height: 100px;
+        
+    }
+
+    span {
+        margin-left: 6px;
+        line-height: 100px;
+    }
 }

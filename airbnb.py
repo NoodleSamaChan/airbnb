@@ -32,13 +32,39 @@ def root():
 def look_for_lair():
     args = request.args
     print(args)
-    query_request = "SELECT id, title, image, lon, lat FROM announcements WHERE lat > {lat1} AND lat < {lat2} AND lon > {lng1} AND lon < {lng2}".format(lat1=args['lat1'], lat2=args['lat2'], lng1=args['lng1'], lng2=args['lng2'])
+    # tl means top left
+    # br means bottom right
+    # Here's the shape fo the map:
+    #    longitude
+    # -180 <---> 180   90 
+    # tl - - - -       ^
+    #  - - - - -       | latitude
+    #  - - - - br      v
+    #                 -90
+    query_request = "SELECT id, title, image, lon, lat FROM announcements WHERE lat > {br_lat} AND lat < {tl_lat} AND lon > {tl_lng} AND lon < {br_lng}"\
+        .format(br_lat=args["br_lat"], br_lng=args["br_lng"], tl_lat=args["tl_lat"], tl_lng=args["tl_lng"]
+    )
     print(query_request)
     if args.get('search') is not None:
         query_request = query_request + " AND title LIKE '{search}'".format(search=args['search'])
     cur.execute(query_request)
 
-    return jsonify(cur.fetchall())
+    #changing the array result into an organised table
+    result = cur.fetchall()
+    result_table = []
+    print(result)
+    
+    for i in result:
+        values = {}
+        values['id'] = i[0]
+        values['title'] = i[1]
+        values['image'] = i[2]
+        values['lon'] = i[3]
+        values['lat'] = i[4]
+        result_table.append(values)
+    print(result_table)
+
+    return jsonify(result_table)
 
 @app.route("/lair/<id>", methods=['GET'])
 def one_lair(id):
