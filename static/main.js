@@ -1,4 +1,5 @@
 const searchbar = document.getElementById("searchbar");
+const announcements = document.getElementById("announcements");
 
 const map = L.map('map').setView([51.505, -0.09], 13);
 const popup = L.popup();
@@ -8,7 +9,21 @@ const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
+var all_markers = []
+
+// Called when a popup is opened and must be called with the marker associated to the click.
+async function popup_opened(marker) {
+  marker.bindPopup("hello");
+  console.log("hello");
+}
+
+// This function updates the left menu and the map with the current
+// position on the map and the current search.
 async function update_announce(bounds) {
+  // First thing first: We need to get the latest freshest info from the
+  // backend, so we're going to compose a request containing the current
+  // view of the map and the search currently going on if there is one.
+
   // tl.lat = ne.lat
   // tl.lng = sw.lng
   // br.lat = sw.lat
@@ -23,15 +38,43 @@ async function update_announce(bounds) {
     let search = searchbar.value;
     query += `&search=${search}`;
   }
-  console.log(query);
 
   let results = await fetch(query, {
     method: "GET"
   });
   let ret = await results.json();
 
-  // TODO: Le payload est mal formé ici
   console.log(ret);
+  // Now that we have the results we can update the website:
+  // 1. We should clear the left menu.
+  // 2. We should clear all the marker on the map.
+  // 3. We should re-insert both the marker and the item in the menu.
+
+  // 1.
+  announcements.innerHTML = "";
+
+  // 2.
+  for (var i = 0; i < all_markers.length; i++) {
+    map.removeLayer(all_markers[i]);
+  }
+  all_markers = [];
+    
+  // 3.
+  for (var i = 0; i < ret.length; i++) {
+    let announce = ret[i];
+    // Insert the new marker.
+    let marker = L.marker([announce.lat, announce.lon], { title: announce.title } ).addTo(map)
+    // marker.bindPopup(popup_opened);
+    all_markers.push(marker);
+
+    // Push the new element into to the list.
+    announcements.innerHTML += `
+    <div class="announce">
+        <img src="${announce.image}"> 
+        <span>${announce.title}</span>
+    </div>`;
+    
+  }
 }
 
 function update_points(e) {
@@ -45,7 +88,7 @@ searchbar.addEventListener('input', update_points);
 
 
 function onMapClick(e) {
-  console.log(e.latlng);
+  console.log(e);
 
   let lat = e.latlng.lat;
   let lng = e.latlng.lng;
