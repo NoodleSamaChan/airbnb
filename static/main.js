@@ -1,4 +1,5 @@
 const searchbar = document.getElementById("searchbar");
+const announcements = document.getElementById("announcements");
 
 const map = L.map('map').setView([51.505, -0.09], 13);
 const popup = L.popup();
@@ -8,7 +9,53 @@ const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
-async function update_announce(bounds) {
+// The list of all the marker we can see on the map.
+// We took care of inserting the ID of the lair associated with each marker
+// to get it back easily when someone click on a marker.
+var all_markers = []
+
+// Called when someone click on a popup.
+async function popup_opened(event) {
+  console.log(event);
+  open_popup(event.sourceTarget)
+
+}
+
+// Called when a popup is opened and must be called with the marker associated to the click.
+async function open_popup(marker) {
+  // First, get the ID associated with this marker.
+  let id = marker.announce_id;
+
+  // Second get the document associated with the id with all its content.
+  let result = await fetch(`http://127.0.0.1:5000/lair/${id}`, {
+    method: "GET"
+  });
+  let lair = await result.json();
+  console.log(lair);
+
+  // Third, create a popup with all the info + a button to delete the document.
+  marker.bindPopup(`
+  <div class="announce_popup">
+    <div>
+      <img src=${lair.image}/>
+      <ul class="view_annonce">
+        <li>${lair.title}</li>
+        <li>${lair.description}</li>
+      </ul>
+    </div>
+    <input type="button" value="Supprimer l'annonce"/>
+  </div>
+`).openPopup();
+
+}
+
+// This function updates the left menu and the map with the current
+// position on the map and the current search.
+async function refresh_announce(bounds) {
+  // First thing first: We need to get the latest freshest info from the
+  // backend, so we're going to compose a request containing the current
+  // view of the map and the search currently going on if there is one.
+
   // tl.lat = ne.lat
   // tl.lng = sw.lng
   // br.lat = sw.lat
@@ -23,20 +70,49 @@ async function update_announce(bounds) {
     let search = searchbar.value;
     query += `&search=${search}`;
   }
-  console.log(query);
 
   let results = await fetch(query, {
     method: "GET"
   });
   let ret = await results.json();
 
-  // TODO: Le payload est mal formé ici
   console.log(ret);
+  // Now that we have the results we can update the website:
+  // 1. We should clear the left menu.
+  // 2. We should clear all the marker on the map.
+  // 3. We should re-insert both the marker and the item in the menu.
+
+  // 1.
+  announcements.innerHTML = "";
+
+  // 2.
+  for (var i = 0; i < all_markers.length; i++) {
+    map.removeLayer(all_markers[i]);
+  }
+  all_markers = [];
+    
+  // 3.
+  for (var i = 0; i < ret.length; i++) {
+    let announce = ret[i];
+    // Insert the new marker.
+    let marker = L.marker([announce.lat, announce.lon], { title: announce.title } ).addTo(map)
+    marker.on('click', popup_opened);
+    marker.announce_id = announce.id;
+    all_markers.push(marker);
+
+    // Push the new element into to the list.
+    announcements.innerHTML += `
+    <div class="announce">
+        <img src="${announce.image}"> 
+        <span>${announce.title}</span>
+    </div>`;
+    
+  }
 }
 
 function update_points(e) {
   let bounds = map.getBounds();
-  update_announce(bounds);  
+  refresh_announce(bounds);  
 }
 
 map.on('moveend', update_points);
@@ -45,7 +121,7 @@ searchbar.addEventListener('input', update_points);
 
 
 function onMapClick(e) {
-  console.log(e.latlng);
+  console.log(e);
 
   let lat = e.latlng.lat;
   let lng = e.latlng.lng;
@@ -110,3 +186,6 @@ async function insertDocument() {
 }
 
 map.on('click', onMapClick);
+
+
+refresh_announce(map.getBounds())
