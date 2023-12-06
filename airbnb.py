@@ -62,8 +62,9 @@ def look_for_lair():
     )
     print(query_request)
     if args.get('search') is not None:
-        query_request = query_request + " AND title LIKE '{search}'".format(search=args['search'])
+        query_request = query_request + " AND title LIKE '{search}' LIMIT 7".format(search=args['search'])
     cur.execute(query_request)
+    print(query_request)
 
     #changing the array result into an organised table
     result = cur.fetchall()
@@ -71,6 +72,7 @@ def look_for_lair():
     print(result)
     
     for i in result:
+        print('lunaluna')
         values = {}
         values['id'] = i[0]
         values['title'] = i[1]
