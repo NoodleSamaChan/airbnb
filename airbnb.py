@@ -12,13 +12,22 @@ postgre_sql = psycopg2.connect("dbname=airbnb user=postgres password=postgres")
 #creation of cursor to execute SQL commands
 cur = postgre_sql.cursor()
 
+#creation of the users table
+cur.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    account_name text UNIQUE NOT NULL PRIMARY KEY,
+    account_password text NOT NULL
+);
+""")
+
 #creation of the announcements table
 cur.execute("""
 CREATE TABLE IF NOT EXISTS announcements (
+    account_name text references users(account_name),
     id SERIAL UNIQUE PRIMARY KEY, 
-    title VARCHAR(500) NOT NULL, 
-    image VARCHAR(2000) NOT NULL, 
-    description VARCHAR(100000) NOT NULL, 
+    title text NOT NULL, 
+    image text NOT NULL, 
+    description text NOT NULL, 
     lon DOUBLE PRECISION NOT NULL, 
     lat DOUBLE PRECISION NOT NULL
 );
@@ -27,6 +36,13 @@ CREATE TABLE IF NOT EXISTS announcements (
 @app.route("/")
 def root():
     return app.send_static_file('index.html')
+
+#creation of user
+@app.route("/user", methods=['POST'])
+def user():
+    content = request.json
+    cur.execute("""CREATE USER %s WITH PASSWORD '%s' AND INSERT INTO users (account_name, account_password) VALUES (%s, %s) """, (content['name'], content['password'], content['name'], content['password']))
+    return jsonify({"status":"success"})
 
 @app.route("/lair", methods=['GET'])
 def look_for_lair():
@@ -69,7 +85,23 @@ def look_for_lair():
 @app.route("/lair/<id>", methods=['GET'])
 def one_lair(id):
     cur.execute("SELECT * from announcements WHERE id = %s", (id))
-    return jsonify(cur.fetchone())
+    
+    #changing the array result into an organised table
+    result = cur.fetchall()
+    result_table_id = []
+    print(result)
+    
+    for i in result:
+        values = {}
+        values['id'] = i[0]
+        values['title'] = i[1]
+        values['image'] = i[2]
+        values['lon'] = i[3]
+        values['lat'] = i[4]
+        result_table_id.append(values)
+    print(result_table_id)
+
+    return jsonify(result_table_id)
 
 @app.route("/lair", methods=['POST'])
 def new_form():   
