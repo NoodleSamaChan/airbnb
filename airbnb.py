@@ -62,7 +62,7 @@ def look_for_lair():
     )
     print(query_request)
     if args.get('search') is not None:
-        query_request = query_request + " AND title LIKE '{search}' LIMIT 7".format(search=args['search'])
+        query_request = query_request + " AND title LIKE '{search}' LIMIT {limit} OFFSET {limit}".format(search=args['search'], limit=args["limit"])
     cur.execute(query_request)
     print(query_request)
 
