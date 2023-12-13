@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link rel="stylesheet" type="text/css" href="static/style.css"/>
-        <script src="static/main.js" defer></script>
+        <link rel="stylesheet" type="text/css" href="/static/style.css"/>
+        <script src="/static/main.js" defer></script>
         <title>LairBnB</title>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
             integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
@@ -29,6 +29,7 @@
             <nav id="navbar">
                 <input id="searchbar" type="search" placeholder="Le vigan"/>
                 <input id="login" type="button" value="Log In"/>
+                <input id="register" type="button" value="Register your account" onclick="location.href = '/static/register.html';"/>
             </nav>
             <div id="map"></div>
         </div>

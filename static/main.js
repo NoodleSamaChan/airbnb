@@ -189,3 +189,27 @@ map.on('click', onMapClick);
 
 
 refresh_announce(map.getBounds())
+
+function openForm() {
+  document.getElementById("register").style.display = "block";
+}
+function closeForm() {
+  document.getElementById("register").style.display = "none";
+}
+
+async function create_Account() {
+    let fullNameValue = document.getElementById("fname").value;
+    let passwordValue = document.getElementById("password").value
+
+    // Send form info to SQL table for new users.
+    let creationAccount = await fetch(`http://127.0.0.1:5000/user`, {
+      method: "POST",
+      body: JSON.stringify({fullName : fullNameValue, password : passwordValue}),
+      headers: {
+        "Content-Type": "application/json",
+      }
+    });
+    let user = await result.json();
+    console.log(user);
+
+  }

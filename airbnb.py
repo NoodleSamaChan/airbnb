@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import psycopg2
 
 app = Flask(__name__)
@@ -9,6 +9,7 @@ app.url_for('static', filename='index.html')
 
 #connection to PGRSQL database
 postgre_sql = psycopg2.connect("dbname=airbnb user=postgres password=postgres")
+postgre_sql.set_session(autocommit=True)
 #creation of cursor to execute SQL commands
 cur = postgre_sql.cursor()
 
@@ -39,10 +40,17 @@ def root():
 
 #creation of user
 @app.route("/user", methods=['POST'])
-def user():
+def create_user():
     content = request.json
-    cur.execute("""CREATE USER %s WITH PASSWORD '%s' AND INSERT INTO users (account_name, account_password) VALUES (%s, %s) """, (content['name'], content['password'], content['name'], content['password']))
-    return jsonify({"status":"success"})
+    try:
+        cur.execute("""INSERT INTO users (account_name, account_password) VALUES (%s, %s)""", (content['fullName'], content['password']))
+        return jsonify({"status":"success"})
+    except psycopg2.errors.UniqueViolation:
+        print('User already exists')
+        response = jsonify({"status":"user already exist"})
+        response.status = 408
+        return response
+    
 
 @app.route("/lair", methods=['GET'])
 def look_for_lair():
