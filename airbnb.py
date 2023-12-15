@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify
+import base64
 import psycopg2
 
 app = Flask(__name__)
@@ -6,6 +7,30 @@ app = Flask(__name__)
 app.config['SERVER_NAME'] = '127.0.0.1:5000'
 
 app.url_for('static', filename='index.html')
+
+def cookie_creation(user_name, password):
+    cookie = f'{user_name}:{password}'
+    secret = 'airbnb'
+    final_cookie = []
+    for k in range(len(cookie)):
+        final_cookie.append((ord(cookie[k]) ^ ord(secret[k%len(secret)])))
+    
+    base64_bytes = base64.b64encode(bytes(final_cookie))
+    base64_message = base64_bytes.decode('utf-8')
+
+    return base64_message
+
+def cookie_decoding(cookie):
+
+    base64_img_bytes = cookie.encode('utf-8')
+
+    decoded_image_data = base64.decodebytes(base64_img_bytes)
+    decoded = ''
+    secret = 'airbnb'
+    for k in range(len(decoded_image_data)):
+        decoded = decoded + chr(decoded_image_data[k] ^ ord(secret[k%len(secret)]))
+    final_decode = decoded.split(':')
+    return final_decode
 
 #connection to PGRSQL database
 postgre_sql = psycopg2.connect("dbname=airbnb user=postgres password=postgres")
@@ -44,13 +69,27 @@ def create_user():
     content = request.json
     try:
         cur.execute("""INSERT INTO users (account_name, account_password) VALUES (%s, %s)""", (content['fullName'], content['password']))
-        return jsonify({"status":"success"})
+        cookie = cookie_creation(content['fullName'], content['password'])
+        return jsonify({"status":"success", "cookie":cookie})
     except psycopg2.errors.UniqueViolation:
         print('User already exists')
-        response = jsonify({"status":"user already exist"})
+        response = jsonify({"status":"user name already taken"})
         response.status = 408
         return response
     
+#Login of users
+@app.route("/user/login", methods=['POST'])
+def user_login():
+    content = request.json
+    cur.execute("""SELECT account_name, account_password FROM users WHERE account_name = %s AND account_password = %s""", (content['fullName'], content['password']))
+    result = cur.fetchall()
+    if len(result) == 0:
+        reponse = jsonify({"status":"account doesn't exist"})
+        reponse.status = 404
+        return reponse
+    else:
+        cookie = cookie_creation(content['fullName'], content['password'])
+        return jsonify({"status":"success", "cookie":cookie})
 
 @app.route("/lair", methods=['GET'])
 def look_for_lair():
@@ -113,20 +152,47 @@ def one_lair(id):
 
     return jsonify(result_table_id)
 
+def validate_cookie(request):
+    header = request.headers
+    if header.get('Authorization') == None:
+        reponse = jsonify({"status":"must be logged in"})
+        reponse.status = 401
+        return reponse
+    else:
+        result = header['Authorization'].split(' ')
+        account_information = cookie_decoding(result[1])
+        print(account_information)
+        cur.execute("""SELECT account_name, account_password FROM users WHERE account_name = %s AND account_password = %s""", (account_information[0], account_information[1]))
+        account_verification = cur.fetchall()
+        if len(account_verification) == 0:
+            reponse = jsonify({"status":"not authorized"})
+            reponse.status = 401
+            return reponse
+        else:
+            return None
+
 @app.route("/lair", methods=['POST'])
-def new_form():   
-    content = request.json
-    print(content)
-    cur.execute("""
-    INSERT INTO announcements (title, image, description, lon, lat) 
-    VALUES (%s, %s, %s, %s, %s)
-    """, (content['title'], content['image'], content['description'], content['lon'], content['lat']))
-    return jsonify({"status":"success"})
+def new_form():
+    verification = validate_cookie(request)
+    if verification == None:
+        content = request.json
+        print(content)
+        cur.execute("""
+        INSERT INTO announcements (title, image, description, lon, lat) 
+        VALUES (%s, %s, %s, %s, %s)
+        """, (content['title'], content['image'], content['description'], content['lon'], content['lat']))
+        return jsonify({"status":"success"})
+    else:
+        return verification
 
 @app.route("/lair/<id>", methods=['DELETE'])
 def delete_form(id):  
-    cur.execute("DELETE FROM announcements WHERE id = %s", (id))
-    return jsonify({"status":"success"}) 
+    verification = validate_cookie(request)
+    if verification == None:
+        cur.execute("DELETE FROM announcements WHERE id = %s", (id))
+        return jsonify({"status":"success"})
+    else:
+        return verification
 
 @app.route("/debug", methods=['GET'])
 def debug():

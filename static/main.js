@@ -163,6 +163,12 @@ async function insertDocument() {
   let image = document.getElementById("image").value;
   let lat = document.getElementById("lat").value;
   let lng = document.getElementById("lng").value;
+  let cookie = document.cookie.split(";");
+  for(i = 0; i < cookie.length; i++) {
+    if (cookie[i].startsWith('cookie=')){
+      cookie = cookie[i].substring('cookie='.length)
+    }
+  }
 
   let payload = {
     title: title,
@@ -171,12 +177,15 @@ async function insertDocument() {
     lat: Number(lat),
     lon: Number(lng),
   };
-  console.log("Sending payload", payload);  
+  console.log("Sending payload", payload); 
+  console.log(cookie);
+   
   let response = await fetch("http://127.0.0.1:5000/lair", {
     method: "POST",
     body: JSON.stringify(payload),
     headers: {
       "Content-Type": "application/json",
+      "Authorization" : "Bearer " + cookie
     },
   });
   let ret = await response.json();
@@ -199,7 +208,7 @@ function closeForm() {
 
 async function create_Account() {
     let fullNameValue = document.getElementById("fname").value;
-    let passwordValue = document.getElementById("password").value
+    let passwordValue = document.getElementById("password").value;
 
     // Send form info to SQL table for new users.
     let creationAccount = await fetch(`http://127.0.0.1:5000/user`, {
@@ -209,7 +218,26 @@ async function create_Account() {
         "Content-Type": "application/json",
       }
     });
-    let user = await result.json();
+    let user = await creationAccount.json();
     console.log(user);
-
+    document.cookie = "cookie="+ user["cookie"] + "; SameSite=None; Secure; path=/";
+    window.location.href = "/static/index.html";
   }
+
+async function login_account() {
+  let fullNameValue = document.getElementById("fname").value;
+  let passwordValue = document.getElementById("password").value
+
+    // Send form info to SQL table for login.
+    let login_account = await fetch(`http://127.0.0.1:5000/user/login`, {
+      method: "POST",
+      body: JSON.stringify({fullName : fullNameValue, password : passwordValue}),
+      headers: {
+        "Content-Type": "application/json",
+      }
+    });
+    let user = await login_account.json();
+    console.log(user);
+    document.cookie ="cookie="+ user["cookie"] + "; SameSite=None; Secure; path=/";
+}
+
